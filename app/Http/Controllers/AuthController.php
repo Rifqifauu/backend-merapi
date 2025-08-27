@@ -8,7 +8,6 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    // REGISTER
     public function register(Request $request)
     {
         $request->validate([
@@ -21,7 +20,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'is_admin' => false, // default 0
+            'is_admin' => false, 
         ]);
 
         $token = $user->createToken('API Token')->plainTextToken;
