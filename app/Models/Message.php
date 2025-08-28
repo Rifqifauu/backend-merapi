@@ -9,13 +9,16 @@ class Message extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['from_user_id', 'to_user_id', 'content'];
+    protected $fillable = [
+        'user_id',
+        'content',
+        'to_admin',
+        'status'
+    ];
 
-    public function fromUser() {
-        return $this->belongsTo(User::class, 'from_user_id');
-    }
-
-    public function toUser() {
-        return $this->belongsTo(User::class, 'to_user_id');
+    // Relasi ke User
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

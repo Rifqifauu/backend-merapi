@@ -10,7 +10,7 @@ class EventsController extends Controller
     // Tampilkan semua event
     public function index()
     {
-        $events = Events::all();
+        $events = Events::orderBy('created_at','desc')->get();
         return response()->json($events);
     }
 

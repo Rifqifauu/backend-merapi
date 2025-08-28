@@ -10,7 +10,7 @@ class NewsController extends Controller
 {
     public function index()
     {
-        return response()->json(News::all());
+        return response()->json(News::orderBy('created_at','desc')->get());
     }
 
     public function store(Request $request)
@@ -24,7 +24,20 @@ class NewsController extends Controller
         $data = $request->only(['title', 'content']);
 
         if ($request->hasFile('media_path')) {
-            $data['media_path'] = $request->file('media_path')->store('news', 'public');
+            $file = $request->file('media_path');
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+
+            // Path absolut ke public_html/storage/news
+            $destination = base_path('../public_html/storage/news');
+
+            if (!file_exists($destination)) {
+                mkdir($destination, 0775, true);
+            }
+
+            $file->move($destination, $filename);
+
+            // Simpan path relatif ke DB
+            $data['media_path'] = 'news/' . $filename;
         }
 
         $news = News::create($data);
@@ -45,10 +58,21 @@ class NewsController extends Controller
         $data = $request->only(['title', 'content']);
 
         if ($request->hasFile('media_path')) {
-            if ($news->media_path) {
-                \Storage::disk('public')->delete($news->media_path);
+            // Hapus file lama jika ada
+            if ($news->media_path && file_exists(base_path('../public_html/storage/'.$news->media_path))) {
+                unlink(base_path('../public_html/storage/'.$news->media_path));
             }
-            $data['media_path'] = $request->file('media_path')->store('news', 'public');
+
+            $file = $request->file('media_path');
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+
+            $destination = base_path('../public_html/storage/news');
+            if (!file_exists($destination)) {
+                mkdir($destination, 0775, true);
+            }
+
+            $file->move($destination, $filename);
+            $data['media_path'] = 'news/' . $filename;
         }
 
         $news->update($data);
@@ -59,9 +83,11 @@ class NewsController extends Controller
     public function destroy($id)
     {
         $news = News::findOrFail($id);
-        if ($news->media_path) {
-            \Storage::disk('public')->delete($news->media_path);
+
+        if ($news->media_path && file_exists(base_path('../public_html/storage/'.$news->media_path))) {
+            unlink(base_path('../public_html/storage/'.$news->media_path));
         }
+
         $news->delete();
 
         return response()->json(['message' => 'News deleted successfully']);

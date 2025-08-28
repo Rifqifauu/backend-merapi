@@ -10,18 +10,11 @@ class AnnouncementsController extends Controller
     // Tampilkan semua pengumuman
     public function index()
     {
-        return response()->json(Announcements::all());
+        return response()->json( Announcements::orderBy('created_at', 'desc')->get()
+);
     }
 
-    // Tampilkan pengumuman tertentu
-    public function show($id)
-    {
-        $announcement = Announcements::find($id);
-        if (!$announcement) {
-            return response()->json(['message' => 'Pengumuman tidak ditemukan'], 404);
-        }
-        return response()->json($announcement);
-    }
+ 
 
     // Simpan pengumuman baru
     public function store(Request $request)

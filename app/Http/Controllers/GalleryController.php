@@ -10,28 +10,41 @@ class GalleryController extends Controller
 {
     public function index()
     {
-        return response()->json(Gallery::all());
+        return response()->json(Gallery::orderBy('created_at','desc')->get());
     }
+public function store(Request $request)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'type'  => 'required|in:image,video',
+        'file'  => 'required|file|mimes:jpeg,jpg,png,gif,mp4,avi,quicktime|max:102400',
+    ]);
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'type' => 'required|in:image,video',
-    'file' => 'required|file|mimes:jpeg,jpg,png,gif,mp4,avi,quicktime|max:102400' // tambahkan quicktime
-        ]);
+    if ($request->hasFile('file')) {
+        $file     = $request->file('file');
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
 
-        // Simpan file ke storage/app/public/gallery
-        $path = $request->file('file')->store('gallery', 'public');
+        // pakai path absolut langsung ke public_html
+        $destination = base_path('../public_html/storage/gallery');
+
+        if (!file_exists($destination)) {
+            mkdir($destination, 0775, true);
+        }
+
+        $file->move($destination, $filename);
 
         $gallery = Gallery::create([
-            'title' => $request->title,
-            'type' => $request->type,
-            'file_path' => $path,
+            'title'     => $request->title,
+            'type'      => $request->type,
+            'file_path' => 'gallery/' . $filename,
         ]);
 
         return response()->json($gallery, 201);
     }
+
+    return response()->json(['error' => 'No file uploaded'], 400);
+}
+
 
     public function destroy(Gallery $gallery)
     {
@@ -45,3 +58,4 @@ class GalleryController extends Controller
         return response()->json(null, 204);
     }
 }
+
